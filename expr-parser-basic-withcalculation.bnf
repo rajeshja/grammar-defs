@@ -1,0 +1,48 @@
+// Lexer
+
+%lex
+
+%%
+
+\s          /* skip */
+\d+         return 'NUMBER'
+
+/lex
+
+
+// Parser
+
+%%
+
+Expression
+    : AdditiveExpression
+    ;
+
+AdditiveExpression
+    : AdditiveExpression '+' MultiplicativeExpression { $$ = Number($1) + Number($3) }
+    | AdditiveExpression '-' MultiplicativeExpression { $$ = Number($1) - Number($3) }
+    | MultiplicativeExpression
+    ;
+
+MultiplicativeExpression
+    : MultiplicativeExpression '*' PrimaryExpression { $$ = Number($1) * Number($3) }
+    | MultiplicativeExpression '/' PrimaryExpression { $$ = Number($1) / Number($3) }
+    | PrimaryExpression 
+    ;
+
+PrimaryExpression 
+    : NUMBER 
+    | ParenthesizedExpression
+    ;
+
+Literal
+    : NumericLiteral
+    ;
+
+NumericLiteral
+    : NUMBER { $$ = Number($1)}
+    ;
+
+ParenthesizedExpression
+    : '(' Expression ')' { $$ = $2 }
+    ;

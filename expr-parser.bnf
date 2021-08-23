@@ -1,0 +1,184 @@
+// Lexer
+
+%lex
+
+%%
+
+\s          /* skip */
+\d+         return 'NUMBER'
+[+\-]       return 'ADDITIVE_OPERATOR'
+[*/]        return 'MULTIPLICATIVE_OPERATOR'
+[\^]        return 'EXPONENT_OPERATOR'
+\w[\w\d_]*  return 'FUNCTION'
+
+/lex
+
+
+// Parser
+
+%%
+
+Expression
+    : FloatExpression
+    ;
+
+FloatExpression
+    : AdditiveExpression
+    ;
+
+AdditiveExpression
+    : AdditiveExpression ADDITIVE_OPERATOR MultiplicativeExpression 
+        { 
+            $$ = {
+                type: 'BinaryExpression',
+                op: $2,
+                left: $1,
+                right: $3 
+            }
+        }
+    | MultiplicativeExpression
+    ;
+
+MultiplicativeExpression
+    : MultiplicativeExpression MULTIPLICATIVE_OPERATOR ExponentialExpression  
+        { 
+            $$ = {
+                type: 'BinaryExpression',
+                op: $2,
+                left: $1,
+                right: $3 
+            }
+        }
+    | ExponentialExpression
+    ;
+
+ExponentialExpression
+    : ExponentialExpression EXPONENT_OPERATOR UnaryExpression
+        { 
+            $$ = {
+                type: 'BinaryExpression',
+                op: $2,
+                left: $1,
+                right: $3 
+            }
+        }
+    | UnaryExpression 
+    ;
+
+UnaryExpression
+    : ADDITIVE_OPERATOR PrimaryExpression
+        {
+            $$ = {
+                type: "UnaryExpression",
+                unary: $1,
+                expression: $2
+            }
+        }
+    | PrimaryExpression
+    ;
+
+PrimaryExpression 
+    : Literal
+    | ParenthesizedExpression
+    | Function
+    ;
+
+Literal
+    : NumericLiteral
+    ;
+
+NumericLiteral
+    : NUMBER 
+        {
+            $$ = {
+                type: 'NumericLiteral',
+                value: $1
+            }
+        }
+    ;
+
+ParenthesizedExpression
+    : '(' Expression ')'
+        {
+            $$ = {
+                type: 'ParenthesizedExpression',
+                value: $2
+            }
+        }
+    ;
+
+Function
+    : FUNCTION '(' Parameters ')'
+        {
+            $$ = {
+                type: "Function",
+                functionName: $1,
+                parameters: $3
+            }
+        }
+    ;
+
+Parameters
+    : Expression AdditionalParameters
+        {
+            arr = [$1]
+            arr.concat($2)
+            $$ = arr
+        }
+    | Expression
+        {
+            $$ = [$1]
+        }
+    ;
+
+AdditionalParameters
+    : ',' Parameters
+        {
+            arr = []
+            arr.concat($2)
+            $$ = arr
+        }
+    ;
+
+//     : OneParameterFunction
+//     | TwoParameterFunction
+//     | ThreeParameterFunction
+//     ;
+//
+// OneParameterFunction
+//     : FUNCTION '(' Expression ')'
+//         {
+//             $$ = {
+//                 type: "OneParameterFunction",
+//                 functionName: $1,
+//                 parameter: $3
+//             }
+//         }
+//     ; 
+//
+// TwoParameterFunction
+//     : FUNCTION '(' Expression ',' Expression ')'
+//         {
+//             $$ = {
+//                 type: "TwoParameterFunction",
+//                 functionName: $1,
+//                 parameter1: $3,
+//                 parameter2: $5
+//             }
+//         }
+//     ; 
+//
+// ThreeParameterFunction
+//     : FUNCTION '(' Expression ',' Expression ',' Expression ')'
+//         {
+//             $$ = {
+//                 type: "ThreeParameterFunction",
+//                 functionName: $1,
+//                 parameter1: $3,
+//                 parameter2: $5,
+//                 parameter2: $7
+//             }
+//         }
+//     ; 
+//
+// $ syntax-cli --grammar expr-parser.bnf --mode LALR1 --parse "(2 + 2) * 2 - 2 + f(3, 4, 5)"

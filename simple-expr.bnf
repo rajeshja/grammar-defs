@@ -1,0 +1,29 @@
+// Lexer
+
+%lex
+
+%%
+
+\s          /* skip */
+\d+         return 'NUMBER'
+
+/lex
+
+
+// Parser
+
+%%
+
+E
+    : E '+' T
+    | T 
+    ;
+
+T
+    : T '*' F 
+    | F 
+    ;
+
+F 
+    : NUMBER 
+    ;
