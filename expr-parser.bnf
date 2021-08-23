@@ -121,8 +121,7 @@ Function
 Parameters
     : Expression AdditionalParameters
         {
-            arr = [$1]
-            arr.concat($2)
+            arr = [$1].concat($2)
             $$ = arr
         }
     | Expression
@@ -134,9 +133,7 @@ Parameters
 AdditionalParameters
     : ',' Parameters
         {
-            arr = []
-            arr.concat($2)
-            $$ = arr
+            $$ = $2
         }
     ;
 
